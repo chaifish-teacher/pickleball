@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f4f5ec">
+<title>匹克球 3D 練習場</title>
+<style>
+:root{color-scheme:light;--bg:#f4f5ec;--card:#fffef8;--ink:#142e29;--sub:#4d635b;--line:#d9e1d2;--mint:#dcecc9;--green:#245f48;--lime:#d8f588;--red:#9d3b2a;--orange:#ffb571}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,"Microsoft JhengHei",sans-serif}
+button,input,select{font:inherit}
+button{min-height:42px;padding:7px 12px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font-weight:750;cursor:pointer}
+button:hover:not(:disabled){background:#e9f2dd}
+button:disabled,input:disabled{opacity:.55;cursor:default}
+:focus-visible{outline:3px solid #a34122;outline-offset:2px}
+[hidden]{display:none!important}
+.shell{width:min(1400px,calc(100% - 64px));margin:auto}
+header{border-bottom:1px solid var(--line)}
+.bar{height:60px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{font-size:14px;font-weight:800;letter-spacing:.12em;display:flex;align-items:center;gap:9px}
+.brand svg{background:#254f40;border-radius:7px;width:29px;height:29px;padding:4px;color:var(--lime)}
+#project{font-size:13px;min-height:36px}
+main{padding:20px 0}
+.intro{margin-bottom:18px}
+.eyebrow{margin:0 0 3px;color:var(--green);font-size:12px;font-weight:850;letter-spacing:.16em}
+h1{margin:0;font-size:clamp(33px,4.1vw,56px);line-height:1.16;letter-spacing:.01em}
+.intro p:last-child{margin:7px 0 0;color:var(--sub)}
+.tabs{display:flex;gap:7px;margin-bottom:13px;flex-wrap:wrap}
+.tabs button{background:#e9eddf;min-height:39px}
+.tabs button[aria-selected=true]{background:#1c4c3b;color:#fff;border-color:#1c4c3b}
+.tabs b{font-size:11px;margin-right:4px;color:#456952}
+.tabs button[aria-selected=true] b{color:var(--lime)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,350px);gap:14px;align-items:start}
+.stage,.panel{border:1px solid var(--line);border-radius:15px;background:var(--card);overflow:hidden}
+.scene{height:clamp(390px,42vw,480px);position:relative;isolation:isolate;background:radial-gradient(ellipse at 45% 35%,#f0f4db,#d9e7ce 80%)}
+.scene:before{position:absolute;inset:0;content:"";background:radial-gradient(#35664744 .7px,transparent .8px) 0 0/19px 19px;mask-image:linear-gradient(#000,transparent 90%);z-index:-1}
+#viewport{position:absolute;inset:0}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+canvas:active{cursor:grabbing}
+.scene-top,.scene-foot{position:absolute;inset:13px 14px auto;display:flex;justify-content:space-between;align-items:flex-start;gap:9px;pointer-events:none}
+.scene-foot{inset:auto 14px 12px;align-items:flex-end}
+.chip{display:inline-block;padding:5px 9px;border:1px solid #b9cbb2;border-radius:6px;background:#f8fbeaee;color:#284d3c;font-size:12px;font-weight:770}
+#cue{font-size:14px;line-height:1.35;max-width:75%;background:#183c31;color:#fff;border-color:#183c31}
+#markKey{display:flex;gap:6px;flex-wrap:wrap}
+#markKey span{font-size:11px;border-radius:6px;padding:3px 6px;border:1px solid #b9cbb2;background:#f8fbeaee;color:#274c3c;font-weight:750}
+#markKey i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;background:#fb9253}
+#markKey span:nth-child(2) i{background:#f3cd36}
+#markKey span:nth-child(3) i{background:#24a6c3}
+.notice{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--card);border:1px solid var(--line);border-radius:12px;width:min(370px,90%);padding:17px;text-align:center;box-shadow:0 10px 35px #213f3422}
+.notice p{margin:4px 0 10px;color:var(--sub)}
+.player{padding:12px 14px 11px;border-top:1px solid var(--line)}
+.player-main,.player-secondary,.timeline-head,.question-actions,.views{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.primary{background:#245f48;color:white;border-color:#245f48}
+.primary:hover:not(:disabled){background:#1b4838}
+.player-main button,.views button{min-height:37px;padding:5px 9px;font-size:13px}
+.player-secondary{justify-content:space-between;margin-top:7px}
+.views button[aria-pressed=true],.choice[aria-pressed=true]{background:#def0cd;border-color:#779972;color:#1c4634}
+#rate{min-height:34px;border:1px solid var(--line);border-radius:7px;padding:3px 6px;background:var(--card);color:var(--ink)}
+.rate{font-size:12px;font-weight:750;white-space:nowrap}
+.timeline-head{justify-content:space-between;color:var(--sub);font-size:12px;margin-top:6px}
+#timeline{width:100%;display:block;min-height:23px;margin:0;accent-color:#29634c;cursor:pointer}
+.panel{padding:16px}
+.kicker{font-size:11px;letter-spacing:.12em;color:var(--green);font-weight:850;margin:0 0 7px}
+.topic-list{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.topic-list button{font-size:14px;min-height:42px;padding:5px}
+.topic-list button[aria-pressed=true]{background:var(--mint);border-color:#92ac7d}
+.card-label{display:inline-flex;font-size:11px;letter-spacing:.07em;color:#365841;font-weight:850}
+h2{margin:2px 0 5px;font-size:24px;line-height:1.25}
+#story{margin:0 0 11px;color:var(--sub);line-height:1.55}
+.case-nav{display:flex;align-items:center;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.case-nav button{min-height:37px;padding:4px 8px;font-size:13px}
+#caseCount{font-size:12px;color:var(--sub);margin-right:auto}
+.question{padding:11px;background:#f0f4e7;border-radius:9px;border:1px solid #e3e8da}
+.question p{margin:0 0 8px;font-weight:800}
+.question-actions>*{flex:1}
+#feedback{margin-top:9px;padding:9px 10px;border-radius:7px;background:#e6efdc;color:#254a38;font-size:14px}
+#feedback[data-correct=false]{background:#faeadc;color:#713824}
+#feedback strong,#feedback span{display:block}
+#feedback span{margin-top:3px}
+#steps{list-style:none;margin:11px 0 0;padding:0;display:grid;gap:5px}
+#steps button{width:100%;text-align:left;display:flex;align-items:baseline;gap:7px;min-height:35px;padding:4px 7px;font-size:13px}
+#steps button span{color:var(--green);font-variant-numeric:tabular-nums;font-weight:850}
+#steps button[aria-current=step]{background:#e6efdc;border-color:#9bb28f}
+.coach-note{background:#faf0dc;border-radius:8px;padding:9px 10px;font-size:13px;color:#64462c;margin:11px 0 0}
+footer{font-size:12px;color:var(--sub);padding:13px 0 20px}
+footer summary{cursor:pointer;font-weight:780;color:var(--green)}
+footer p{margin:4px 0}
+a{color:#245f48}
+body.projecting .shell{width:calc(100% - 30px);max-width:none}
+body.projecting .intro{display:none}
+body.projecting .scene{height:clamp(375px,calc(100dvh - 220px),850px)}
+body.projecting .layout{grid-template-columns:minmax(0,1fr) minmax(325px,25%)}
+body.projecting .panel{font-size:19px}
+body.projecting .panel button{font-size:15px}
+@media(max-width:950px){.shell{width:calc(100% - 30px)}.layout{grid-template-columns:minmax(0,1fr) 290px}.panel{padding:13px}}
+@media(max-width:720px){
+ .shell,body.projecting .shell{width:calc(100% - 22px)} .bar{height:48px} main{padding-top:14px}
+ .layout,body.projecting .layout{grid-template-columns:1fr}.intro{margin-bottom:12px}
+ .scene,body.projecting .scene{height:clamp(274px,75vw,435px)}.tabs button{font-size:14px;padding-inline:8px}
+ .scene-top,.scene-foot{left:8px;right:8px}.scene-top{top:8px}.scene-foot{bottom:8px}
+ #cue{font-size:12px}.player{padding:8px}.player-main,.views{gap:4px}.player-main button,.views button{padding:4px 6px}
+}
+</style>
+</head>
+<body>
+<header><div class="shell bar"><div class="brand"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 5v14M8 5v14m8-14v14M3 12h5m8 0h5"/></svg> 球場觀察室</div><button id="project" aria-pressed="false">投影模式</button></div></header>
+<main class="shell">
+<div class="intro"><p class="eyebrow">體育課 ・ 互動模型</p><h1>匹克球 3D 練習場</h1><p>先看球落在哪裡，再放慢動作，找出腳步、拍面和擊球點。</p></div>
+<nav class="tabs" aria-label="學習模式" role="tablist">
+<button id="tab-rules" role="tab" aria-controls="lesson" aria-selected="true" data-mode="rules"><b>01</b>球場規則</button>
+<button id="tab-skills" role="tab" aria-controls="lesson" aria-selected="false" data-mode="skills" tabindex="-1"><b>02</b>動作示範</button>
+<button id="tab-safety" role="tab" aria-controls="lesson" aria-selected="false" data-mode="safety" tabindex="-1"><b>03</b>上場提醒</button>
+</nav>
+<div class="layout">
+<section class="stage" aria-label="三維球場與播放控制">
+<div class="scene">
+<div id="viewport"></div>
+<div class="scene-top"><span class="chip" id="sceneName">01 ／ 球場規則</span><span class="chip" id="viewName">斜上方</span></div>
+<div class="scene-foot"><span class="chip" id="cue">準備載入球場</span><div id="markKey" hidden><span><i></i>腳步</span><span><i></i>擊球點</span><span><i></i>拍面</span></div></div>
+<div id="notice" class="notice" role="status"><strong id="noticeTitle">正在載入球場</strong><p id="noticeText">正在下載 3D 程式庫。</p><button id="retry" hidden>重新載入</button></div>
+<noscript><div class="notice">請啟用 JavaScript，再重新開啟本頁。</div></noscript>
+</div>
+<div class="player">
+<div class="player-main">
+<button class="primary" id="play" disabled>▶ 播放</button><button id="pause" disabled>Ⅱ 暫停</button><button id="replay" disabled>↺ 重播</button><button id="nextStep" disabled>下一步 →</button>
+</div>
+<div class="player-secondary">
+<div class="views" aria-label="球場視角">
+<button data-view="top" aria-pressed="false" disabled>俯視球場</button><button data-view="side" aria-pressed="false" disabled>球員側面</button><button id="reset" disabled>重設視角</button>
+</div>
+<label class="rate">播放速度 <select id="rate" disabled><option value=".25">0.25 倍</option><option value=".5">0.5 倍</option><option value="1" selected>1 倍</option><option value="1.5">1.5 倍</option><option value="2">2 倍</option></select></label>
+</div>
+<div class="timeline-head"><span id="phase">準備</span><span id="time">0.0 秒</span></div>
+<input id="timeline" type="range" min="0" max="4" value="0" step=".01" aria-label="播放進度" disabled>
+</div>
+</section>
+<section id="lesson" class="panel" role="tabpanel" aria-labelledby="tab-rules">
+<p id="panelTitle" class="kicker">選擇規則</p><div id="topics" class="topic-list"></div>
+<span class="card-label" id="cardLabel"></span><h2 id="title"></h2><p id="story"></p>
+<div class="case-nav" id="cases"><span id="caseCount"></span><button id="prevCase">上一情境</button><button id="nextCase">下一情境</button></div>
+<div id="quiz" class="question"><p id="question">你怎麼判？</p><div class="question-actions"><button class="choice" data-answer="yes"></button><button class="choice" data-answer="no"></button></div><div id="feedback" hidden role="status"></div></div>
+<div id="versions" class="question-actions" hidden><button class="choice" data-version="good" aria-pressed="true">建議做法</button><button class="choice" data-version="bad" aria-pressed="false">常見錯誤</button></div>
+<ol id="steps" aria-label="示範步驟"></ol>
+<p id="coach" class="coach-note" hidden></p>
+</section>
+</div>
+<footer><details><summary>開啟方式、網路需求與資料來源</summary><p>下載 HTML 後，以 Chrome、Edge、Firefox 等現代瀏覽器開啟。載入時須連網並能存取 cdn.jsdelivr.net，以下載固定版本 Three.js 0.160.1。無法使用 WebGL 時會改用簡化繪圖。可在模型上拖曳或用方向鍵轉動視角。</p><p>規則依<a href="https://usapickleball.org/docs/rules/USAP-Official-Rulebook.pdf" target="_blank" rel="noopener">美國匹克球協會 2026 年官方規則</a>第 7、8、10、11 節。動作參考<a href="https://usapickleball.org/pickleball-skills/level-two/pickleball-basics-positioning-tips/" target="_blank" rel="noopener">協會入門教學</a>，動畫為課堂示意。</p></details></footer>
+</main>
+<script>
+'use strict';
+const byId=id=>document.getElementById(id);
+const buttons=(selector)=>Array.from(document.querySelectorAll(selector));
+const limit=(x,min,max)=>Math.max(min,Math.min(max,x));
+const mix=(a,b,t)=>a+(b-a)*t;
+const blend=(a,b,t)=>a.map((v,i)=>mix(v,b[i],t));
+const GROUND=.066, NVZ=2.134, BASE=6.706, SIDE=3.048;
+const ruleNames=['對角發球','雙彈跳規則','非截擊區','界內與界外'];
+const skillNames=['準備姿勢','下手發球','正手擊地球','網前截擊'];
+const safetyNames=['保持揮拍間距','先喊球再接','鄰場來球先停'];
+const names={rules:ruleNames,skills:skillNames,safety:safetyNames};
+
+// Pose coordinates are relative to the feet. Local forward points toward the net.
+const ready={drop:.13,lean:.14,width:.57,lead:0,twist:0,hand:[.36,1.18,-.44],left:[-.25,1.13,-.45],bat:[-.07,.24,-.05],face:.12};
+const pose=(props)=>({...ready,...props});
+const poses={
+ ready,
+ stiff:pose({drop:0,lean:0,width:.24,hand:[.51,.78,.01],left:[-.45,.76,0],bat:[.03,-.24,0]}),
+ load:pose({drop:.11,lean:.03,lead:.18,twist:-.43,hand:[.52,.67,.23],left:[-.20,1.01,-.47],bat:[.16,-.15,.09]}),
+ serve:pose({drop:.08,lean:.19,lead:.24,twist:-.03,hand:[.37,.94,-.50],left:[-.33,1.00,-.30],bat:[.11,-.23,-.07],face:.20}),
+ lift:pose({drop:.06,lean:.18,lead:.24,twist:.30,hand:[.02,1.53,-.50],left:[-.37,1.08,-.21],bat:[-.15,.22,-.03]}),
+ highLoad:pose({drop:.04,twist:-.30,hand:[.52,1.44,.15],bat:[.16,.16,0]}),
+ highServe:pose({drop:.03,lean:.16,twist:.02,hand:[.49,1.50,-.42],bat:[.16,.14,-.08]}),
+ foreLoad:pose({drop:.24,lean:.14,lead:.20,twist:-.48,hand:[.64,.81,.25],left:[-.22,1.04,-.35],bat:[.20,-.12,.05]}),
+ fore:pose({drop:.23,lean:.22,lead:.22,twist:.07,hand:[.49,.86,-.53],left:[-.34,1.04,-.26],bat:[.17,-.10,-.06],face:.18}),
+ foreFinish:pose({drop:.11,lean:.23,lead:.25,twist:.35,hand:[-.03,1.49,-.54],bat:[-.13,.23,-.04]}),
+ late:pose({drop:.03,lean:0,twist:-.50,hand:[.67,.89,.37],bat:[.20,-.05,.08]}),
+ lateFinish:pose({drop:.03,twist:.23,hand:[.32,1.35,-.29],bat:[-.07,.22,-.02]}),
+ volleyPrep:pose({drop:.19,lean:.19,hand:[.46,1.24,-.30],bat:[.09,.22,-.05]}),
+ volley:pose({drop:.19,lean:.23,hand:[.45,1.23,-.59],bat:[.09,.22,-.05],face:.05}),
+ volleyEnd:pose({drop:.19,lean:.22,hand:[.39,1.25,-.65],bat:[.09,.22,-.05],face:.05}),
+ bigLoad:pose({drop:.05,lean:.04,twist:-.55,hand:[.62,1.40,.42],bat:[.18,.16,.08]}),
+ bigEnd:pose({drop:.05,lean:.36,twist:.55,hand:[-.28,1.56,-.62],bat:[-.19,.16,-.06]}),
+ step:pose({drop:.19,lean:.28,lead:.31,hand:[.43,1.19,-.59],bat:[.09,.22,-.05]}),
+ stop:pose({drop:.11,lean:.06,hand:[.36,.80,.01],left:[-.53,1.44,-.26],bat:[.16,-.20,.02]}),
+ call:pose({drop:.14,lean:.17,hand:[.32,1.12,-.45],left:[-.58,1.46,-.25],bat:[.02,.23,-.05]}),
+ low:pose({drop:.31,lean:.30,lead:.25,hand:[.44,.58,-.62],bat:[.16,-.10,-.05],face:.27})
+};
+const actor=(team,x,z,keys=[],yaw=team===0?0:Math.PI)=>({team,x,z,keys,yaw});
+const k=(t,p,x,z)=>({t,p,x,z});
+function actorAt(a,t){
+ const keys=[k(0,'ready',a.x,a.z),...a.keys].map(key=>({...key,x:key.x??a.x,z:key.z??a.z}));
+ let before=keys[0], after=before;
+ for(const key of keys){
+   if(key.t<=t){before=after=key;continue;}
+   after=key;break;
+ }
+ const f=after.t===before.t?0:limit((t-before.t)/(after.t-before.t),0,1);
+ const p0=poses[before.p],p1=poses[after.p];
+ const p={};
+ for(const key of Object.keys(ready)) p[key]=Array.isArray(ready[key])?blend(p0[key],p1[key],f):mix(p0[key],p1[key],f);
+ return {x:mix(before.x,after.x,f),z:mix(before.z,after.z,f),yaw:a.yaw,p};
+}
+function world(a,v){
+ const c=Math.cos(a.yaw),s=Math.sin(a.yaw);
+ return [a.x+v[0]*c+v[2]*s,v[1],a.z-v[0]*s+v[2]*c];
+}
+function contact(a){
+ const {p}=a;
+ return world(a,[p.hand[0]+p.bat[0],p.hand[1]+p.bat[1],p.hand[2]+p.bat[2]-.10]);
+}
+const cue=(t,label,desc=label)=>({t,label,desc});
+const at=(t,point,arc=0)=>({t,point,arc});
+const hit=(t,index,arc=0)=>({t,index,arc});
+const land=(t,x,z,arc=0)=>({...at(t,[x,GROUND,z],arc),bounce:true});
+const clip=(actors,ball,steps,extra={})=>({actors,ball,steps,duration:steps.at(-1).t+.64,...extra});
+const serving=(x=-1.55)=>actor(0,x,BASE+.47,[k(.36,'load'),k(.80,'serve'),k(1.15,'lift'),k(1.68,'ready')]);
+const serveSteps=[cue(0,'觀察發球者','看發球者在底線後的站位。'),cue(.80,'發球','球拍向前上方揮出。')];
+function serveClip(endX,endZ){
+ return clip([serving(),actor(1,1.65,-5.8)],
+ [at(0,[-1.40,1.04,BASE+.10]),at(.37,[-1.35,.98,BASE+.31]),hit(.8,0),land(2.05,endX,endZ,1.27)],
+ [...serveSteps,cue(1.36,'球越過球網'),cue(2.05,'觀察落點','看球碰到哪一塊地面。')],
+ {zone:'serve',focus:[endX,0,endZ]});
+}
+function bounceClip(early){
+ const a=actor(0,-1.55,BASE+.47,[k(.36,'load'),k(.80,'serve'),k(1.15,'lift'),k(1.68,'ready'),k(2.58,'ready',-.64,4.65),k(early?3.33:4.04,early?'volley':'fore',-.64,4.65),k(early?3.68:4.38,early?'volleyEnd':'foreFinish',-.64,4.65)]);
+ const b=actor(1,1.67,-5.16,[k(1.68,'foreLoad'),k(2.31,'fore'),k(2.66,'foreFinish'),k(3.37,'ready',.52,-3.8),k(5.19,'volley',.52,-3.8)]);
+ const start=[at(0,[-1.40,1.04,BASE+.10]),at(.37,[-1.35,.98,BASE+.31]),hit(.8,0),land(1.83,1.18,-3.85,1.35),hit(2.31,1,.13)];
+ const steps=[...serveSteps,cue(1.83,'第 1 次落地','發球在接發方場內第一次落地。'),cue(2.31,'接發方回球')];
+ if(early){
+   start.push(hit(3.33,0,.97),at(3.69,[-.45,1.8,2.28],.10));
+   steps.push(cue(3.33,'觀察發球方回擊','看球在發球方這一側是否已經落地。'));
+ } else {
+   start.push(land(3.57,.04,3.31,1.15),hit(4.04,0,.10),hit(5.19,1,.95),land(6.05,-1.2,3.32,.85));
+   steps.push(cue(3.57,'第 2 次落地','接發球在發球方場內第一次落地。'),cue(4.04,'發球方回擊'),cue(5.19,'觀察接發方下一拍','注意這一拍是在空中還是落地後擊球。'));
+ }
+ return clip([a,b],start,steps,{duration:early?3.93:6.36,zone:'halves'});
+}
+function kitchenClip(kind){
+ const ground=kind==='ground', toes=kind==='toes', momentum=kind==='momentum';
+ const z=ground?1.98:toes?2.344:2.61;
+ const a=actor(0,-.37,z,[k(.48,'volleyPrep'),k(1.42,ground?'foreLoad':'volleyPrep'),k(ground?2.16:1.80,ground?'low':'volley'),k(2.35,momentum?'step':ground?'foreFinish':'volleyEnd',-.37,momentum?2.11:z),k(2.8,momentum?'step':'ready',-.37,momentum?2.11:z)]);
+ const b=actor(1,.72,-4.2,[k(.12,'foreLoad'),k(.44,'fore'),k(.81,'foreFinish'),k(1.28,'ready')]);
+ const balls=[hit(.44,1)];
+ if(ground) balls.push(land(1.70,.19,1.11,1.23));
+ const strike=ground?2.16:1.80;
+ balls.push(hit(strike,0,ground?.11:1.12),land(3.19,.54,-3.10,.83));
+ const steps=[cue(0,'回合進行中','這個回合前兩拍已各落地一次。'),cue(.44,'對面來球')];
+ if(ground) steps.push(cue(1.70,'球在區內落地'));
+ steps.push(cue(strike,'看腳與球的位置','暫停觀察鞋尖和區線，再看球是否先落地。'));
+ if(momentum) steps.push(cue(2.35,'看截擊後的腳步','注意球員是否因這次截擊向前踏進區內。'));
+ return clip([a,b],balls,steps,{duration:3.55,zone:'kitchen',focus:[-.37,0,z]});
+}
+function lineClip(out){
+ const x=out?SIDE+.33:SIDE-.018, z=4.20;
+ const b=actor(1,1,-3.44,[k(.25,'foreLoad'),k(.74,'fore'),k(1.04,'foreFinish'),k(1.48,'ready')]);
+ return clip([actor(0,1.92,4.90),b],
+ [hit(.74,1),land(2.03,x,z,1.55)],
+ [cue(0,'觀察回合中的來球','這球是回擊球。'),cue(.74,'回擊過網'),cue(2.03,'落點靠近邊線','看球落地時有沒有接觸邊線。')],
+ {zone:'line',focus:[x,0,z]});
+}
+
+const scenario=(title,story,answer,why,movie)=>({title,story,answer,why,movie});
+const rules=[
+ [
+  scenario('底線後的第一球','球員在底線後發球。觀察球越網後第一次落地的位置。',true,'球先越過非截擊區，再落在對角發球區內。',()=>serveClip(1.40,-4.65)),
+  scenario('改變發球落點','同一個發球位置，這次球的落點換了。',false,'球落在正對面的半區。發球必須落在對角發球區。',()=>serveClip(-1.45,-4.65)),
+  scenario('靠近區線的發球','球飛向對角，但落點很靠近球網。',false,'發球必須越過非截擊區和它的區線。球碰到這條區線仍是短球犯規。',()=>serveClip(1.37,-NVZ))
+ ],
+ [
+  scenario('發球方在空中回擊','接發方已經回球。注意發球方如何處理這顆回球。',false,'接發方已等發球落地，但發球方也必須等回球在自己這側落地後才能擊球。',()=>bounceClip(true)),
+  scenario('兩邊各落地一次之後','觀察接發方最後一個動作。最後一拍可以直接截擊嗎？',true,'發球先在接發方落地，接發球再於發球方落地。兩邊各落地一次後，接下來可以截擊。',()=>bounceClip(false))
+ ],
+ [
+  scenario('進區打反彈球','球員站在非截擊區內。觀察球員擊球前，球是否已落地。',true,'球先落地才擊球，可以站在非截擊區內回擊。',()=>kitchenClip('ground')),
+  scenario('鞋尖碰區線','球員沒有等球落地，請在擊球瞬間看他的鞋尖。',false,'截擊時鞋尖碰到非截擊區線。區線屬於非截擊區，所以犯規。',()=>kitchenClip('toes')),
+  scenario('打完才跨進區內','截擊瞬間雙腳還在線外。請繼續看擊球後的腳步。',false,'球員因剛才截擊的慣性踏進非截擊區。即使碰區發生在擊球之後，仍是犯規。',()=>kitchenClip('momentum')),
+  scenario('站穩在線後截擊','觀察球員擊球當下的位置，以及擊球後有沒有踏線。',true,'這個回合已完成雙彈跳。球員截擊時和擊球後都維持在線外。',()=>kitchenClip('clean'))
+ ],
+ [
+  scenario('邊線附近的落點','回合中，球從對面飛過來。看它落地的接觸點。',true,'回合中，球的落地接觸點碰到邊線，判界內。',()=>lineClip(false)),
+  scenario('另一球也靠近邊線','這球落在邊線附近。用俯視看球是否真的碰線。',false,'落地接觸點完全在線外，判界外。',()=>lineClip(true))
+ ]
+];
+const skillText=[
+ [
+  ['屈膝，拍子放身前','雙腳略分開，膝蓋微彎，重心稍前。拍子放在身體前方，視線跟著球。','試著暫停並從側面看膝蓋彎曲的角度。'],
+  ['站太直，拍子垂在身側','膝蓋打直、雙腳靠太近，拍子也放低了。來球時需要多做一步才能準備回擊。','試著切回建議做法，比較雙腳間距和拍子高度。']
+ ],
+ [
+  ['由下往上發球','示範不落地的下手發球。球拍向上揮，擊球點不高於腰，拍頭最高點不高於手腕。','在擊球停格比較腰、手腕與拍頭的高度。落地發球有不同的動作規定。'],
+  ['在腰部上方擊球','示範不落地發球時，把球抬太高才打。擊球點高於腰、拍頭也明顯高於手腕。','切到側面，再用同一個步驟比較兩種擊球高度。']
+ ],
+ [
+  ['等落地，往身前擊球','微轉肩、引拍，等球落地後在身前接觸球，擊球後順勢收拍。','試著先看落地，再跳到擊球停格，找出球相對於前腳的位置。'],
+  ['球到身後才出拍','球已經來到身體側後方才擊球，留給自己調整拍面的時間較少。','比較兩版的擊球點，注意球是在腳的前方還是後方。']
+ ],
+ [
+  ['拍在身前，短推回球','在線外站穩，保持拍面在胸前。來球未落地前，以短動作把球送回。','在準備與擊球兩步之間比較球拍移動的距離。'],
+  ['把球拍拉到身後','準備時引拍過大，球到面前才快速甩拍，容易來不及調整方向。','把速度調到 0.25 倍，比較擊球前球拍走過的路徑。']
+ ]
+];
+function skillMovie(i,bad){
+ if(i===0){
+   const a=actor(0,.10,4.0,[k(.72,bad?'stiff':'ready'),k(1.44,bad?'stiff':'volleyPrep'),k(2.35,bad?'stiff':'ready')]);
+   return clip([a],[at(0,[.40,1.08,-.70]),at(1.75,[.55,1.20,2.18],.19),at(2.55,[.55,1.26,3.15],.06)],
+   [cue(0,'準備接球'),cue(.72,'觀察腳步和膝蓋'),cue(1.44,'觀察拍子位置'),cue(2.35,'準備下一拍')],{focus:[.10,0,4],close:true,marks:1.44});
+ }
+ const isServe=i===1, isFore=i===2;
+ const x=isServe?-1.55:0,z=isServe?BASE+.47:isFore?4.20:2.74;
+ const t=1.50;
+ const prep=isServe?(bad?'highLoad':'load'):isFore?(bad?'ready':'foreLoad'):(bad?'bigLoad':'volleyPrep');
+ const strike=isServe?(bad?'highServe':'serve'):isFore?(bad?'late':'fore'):'volley';
+ const finish=isServe?'lift':isFore?(bad?'lateFinish':'foreFinish'):(bad?'bigEnd':'volleyEnd');
+ const a=actor(0,x,z,[k(.66,prep),k(1.25,prep),k(t,strike),k(1.92,finish),k(2.46,'ready')]);
+ const ball=isServe?[at(0,[x+.18,1.02,z-.36]),at(1.12,[x+.33,bad?1.70:.89,z-.28]),hit(t,0),land(2.95,1.45,-4.05,1.38)]:
+ isFore?[at(0,[.61,1.02,-1.45]),land(bad?1.06:1.02,.64,bad?3.89:2.99,.68),hit(t,0,.14),land(2.72,-1.02,-3.62,1.38)]:
+ [at(0,[.62,1.20,-4.16]),hit(t,0,.29),land(2.68,-.80,-4.16,.54)];
+ const steps=[cue(0,'預備'),cue(.66,'觀察引拍'),...(isFore?[cue(bad?1.06:1.02,'球先落地')]:[]),cue(t,'擊球瞬間','看腳步、拍面和擊球點。'),cue(1.92,'觀察收拍')];
+ return clip([a],ball,steps,{focus:[x,0,z],close:true,duration:3.12,marks:t});
+}
+const safetyText=[
+ ['保持揮拍間距','兩人練球前先拉開距離，再開始揮拍。','做揮拍練習時，先看前後左右。有人走進揮拍範圍就停下。'],
+ ['先喊球再接','兩個人都可能接到中間球時，一人清楚喊「我來」，另一人讓出位置。','喊完球再往前接，避免兩支球拍在同一個位置交會。'],
+ ['鄰場來球先停','看到另一顆球滾入場內，示意停止，確認安全後再撿球。','等場地清空、雙方都準備好，再重新開始。']
+];
+function safetyMovie(i){
+ if(i===0) return clip([
+  actor(0,-.55,4.3,[k(1.26,'ready',-1.48,4.3),k(1.68,'foreLoad',-1.48,4.3),k(2.18,'fore',-1.48,4.3),k(2.63,'foreFinish',-1.48,4.3)]),
+  actor(0,.55,4.3,[k(1.26,'ready',1.48,4.3),k(1.68,'foreLoad',1.48,4.3),k(2.18,'fore',1.48,4.3),k(2.63,'foreFinish',1.48,4.3)])],[],
+ [cue(0,'先看兩人的距離'),cue(1.26,'先拉開距離'),cue(2.18,'各自在自己的範圍揮拍')],{focus:[0,0,4.3],close:true});
+ if(i===1) return clip([
+  actor(0,-1.47,4.16,[k(.82,'call',-1.22,4.16),k(1.42,'foreLoad',-.72,4.05),k(1.88,'fore',-.72,4.05),k(2.15,'foreFinish',-.72,4.05)]),
+  actor(0,1.29,4.25,[k(.82,'ready',.91,4.25),k(1.60,'ready',1.60,4.56)])],
+ [at(0,[-.06,1.42,-2.14]),land(1.37,-.08,2.89,.86),hit(1.88,0,.22),land(2.86,-.54,-4.24,1.12)],
+ [cue(0,'中路來球'),cue(.82,'左側球員：「我來！」'),cue(1.6,'隊友讓出位置'),cue(1.88,'一人完成回擊')],{focus:[0,0,4.1],duration:3.05});
+ return clip([actor(0,-.80,3.36,[k(.48,'ready'),k(1.15,'stop')]),actor(1,.87,-3.65,[k(.48,'ready'),k(1.15,'stop')])],
+ [at(0,[-4.12,GROUND,2.5]),at(1.72,[.29,GROUND,2.36])],
+ [cue(0,'鄰場的球滾進來'),cue(1.15,'停下並示意對方'),cue(1.72,'場地清空後再繼續')],{focus:[0,0,2.5]});
+}
+function makeRenderer(T) {
+  // Keep the same scene and camera usable when a browser has no WebGL context.
+  const canvas = document.createElement('canvas');
+  const gl = canvas.getContext('webgl2', {alpha:true,antialias:true})
+    || canvas.getContext('webgl', {alpha:true,antialias:true});
+  if (gl) return new T.WebGLRenderer({canvas, context:gl, antialias:true, alpha:true});
+
+  const surface = document.createElement('canvas');
+  const ctx = surface.getContext('2d');
+  if (!ctx) throw new Error('Canvas is unavailable');
+  let ratio=1;
+  const faces=new WeakMap();
+  const projection=new T.Matrix4();
+  const point=new T.Vector3();
+  const normal=new T.Vector3();
+  const normalMatrix=new T.Matrix3();
+  const light=new T.Vector3(-8,14,8).normalize();
+
+  function geometryFaces(geometry) {
+    if (faces.has(geometry)) return faces.get(geometry);
+    const position=geometry.attributes.position;
+    const index=geometry.index.array;
+    const polygons=[];
+    const paired=geometry.type==='PlaneGeometry' || geometry.type==='BoxGeometry';
+    const stride=paired?6:3;
+    for(let i=0;i<index.length;i+=stride){
+      const ids=Array.from(new Set(index.slice(i,i+stride)));
+      const vertices=ids.map(id=>new T.Vector3().fromBufferAttribute(position,id));
+      // Built-in quads need their last two corners reordered.
+      if(geometry.type==='PlaneGeometry' || geometry.type==='BoxGeometry') [vertices[2],vertices[3]]=[vertices[3],vertices[2]];
+      const [a,b,c]=vertices;
+      const n=b.clone().sub(a).cross(c.clone().sub(a)).normalize();
+      polygons.push({vertices,n});
+    }
+    faces.set(geometry,polygons);
+    return polygons;
+  }
+
+  return {
+    domElement:surface, shadowMap:{},
+    setClearColor(){},
+    setPixelRatio(value){ratio=value;},
+    setSize(width,height){
+      surface.width=Math.round(width*ratio);
+      surface.height=Math.round(height*ratio);
+    },
+    render(scene,camera){
+      const halfWidth=surface.width/2, halfHeight=surface.height/2;
+      scene.updateMatrixWorld();
+      camera.updateMatrixWorld();
+      const layers=[[],[]];
+      scene.traverseVisible(mesh=>{
+        if(!mesh.isMesh || mesh.material.isShadowMaterial) return;
+        projection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse).multiply(mesh.matrixWorld);
+        normalMatrix.getNormalMatrix(mesh.matrixWorld);
+        const color=mesh.material.color;
+        for(const face of geometryFaces(mesh.geometry)){
+          const p=face.vertices.map(vertex=>{
+            point.copy(vertex).applyMatrix4(projection);
+            return {x:(1+point.x)*halfWidth,y:(1-point.y)*halfHeight,z:point.z};
+          });
+          const [a,b,c]=p;
+          const winding=(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+          if(winding>=0) continue;
+          normal.copy(face.n).applyNormalMatrix(normalMatrix);
+          const lit=.58+Math.max(0,normal.y)*.28+Math.max(0,normal.dot(light))*.22;
+          const shade=color.clone().multiplyScalar(lit).getStyle();
+          const image=mesh.material.map?.image;
+          const z=p.reduce((sum,v)=>sum+v.z,0)/p.length - (image ? .003 : 0);
+          const base=mesh.userData.base;
+          layers[base===null || base===undefined?1:0].push({p,z,base,shade,image});
+        }
+      });
+      ctx.clearRect(0,0,surface.width,surface.height);
+      ctx.lineJoin='round';
+      layers[0].sort((a,b)=>a.base-b.base || b.z-a.z);
+      layers[1].sort((a,b)=>b.z-a.z);
+      for(const layer of layers){
+        for(const {p,shade,image} of layer){
+          if(image && p.length===4){
+            const [a,b,,d]=p;
+            ctx.setTransform((d.x-a.x)/image.width,(d.y-a.y)/image.width,(b.x-a.x)/image.height,(b.y-a.y)/image.height,a.x,a.y);
+            ctx.drawImage(image,0,0);
+            ctx.resetTransform();
+          }else{
+            ctx.beginPath();
+            ctx.moveTo(p[0].x,p[0].y);
+            for(const v of p.slice(1)) ctx.lineTo(v.x,v.y);
+            ctx.closePath();
+            ctx.strokeStyle=ctx.fillStyle=shade;
+            ctx.lineWidth=.6;
+            ctx.stroke();
+            ctx.fill();
+          }
+        }
+      }
+    }
+  };
+}
+
+function makeCourt(T,changedView){
+ const viewport=byId('viewport');
+ const scene=new T.Scene();
+ const renderer=makeRenderer(T);
+ renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,1.6));
+ renderer.setClearColor(0,0);
+ renderer.shadowMap.enabled=true;
+ renderer.shadowMap.type=T.PCFSoftShadowMap;
+ const canvas=renderer.domElement;
+ canvas.tabIndex=0;
+ canvas.setAttribute('aria-label','匹克球 3D 模型，可用方向鍵旋轉');
+ viewport.appendChild(canvas);
+ const camera=new T.OrthographicCamera(-10,10,10,-10,.1,120);
+ scene.add(new T.HemisphereLight(0xffffed,0x769681,2.14));
+ const sun=new T.DirectionalLight(0xffebc5,2.1);
+ sun.position.set(-5,11,9);
+ sun.castShadow=true;
+ sun.shadow.mapSize.set(1024,1024);
+ Object.assign(sun.shadow.camera,{left:-13,right:13,bottom:-13,top:13,near:.5,far:32});
+ sun.shadow.normalBias=.025;
+ scene.add(sun);
+
+ const cube=new T.BoxGeometry(1,1,1);
+ const orb=new T.IcosahedronGeometry(1,1);
+ // The lightweight renderer expects indexed geometry.
+ const ballGeo=new T.BufferGeometry();
+ ballGeo.setAttribute('position',orb.attributes.position);
+ ballGeo.setIndex(Array.from({length:orb.attributes.position.count},(_,i)=>i));
+ const materials=new Map();
+ function paint(color){
+   if(!materials.has(color)) materials.set(color,new T.MeshStandardMaterial({color,roughness:.87}));
+   return materials.get(color);
+ }
+ function box(x,y,z,w,h,d,color,layer=null,parent=scene){
+   const mesh=new T.Mesh(cube,paint(color));
+   mesh.position.set(x,y,z);
+   mesh.scale.set(w,h,d);
+   mesh.userData.base=layer;
+   mesh.castShadow=layer===null;
+   mesh.receiveShadow=true;
+   parent.add(mesh);
+   return mesh;
+ }
+ const floor=new T.Mesh(new T.PlaneGeometry(100,100),new T.ShadowMaterial({opacity:.17}));
+ floor.rotation.x=-Math.PI/2;
+ floor.position.y=-.51;
+ floor.receiveShadow=true;
+ scene.add(floor);
+ box(0,-.31,0,8.9,.38,15.55,0x293b35,0);
+ box(0,-.14,0,8.98,.19,15.62,0x828e66,1);
+ box(0,-.035,0,8.82,.07,15.46,0x648363,2);
+ const court=[];
+ for(const side of [1,-1]){
+   for(const x of [-SIDE/2,SIDE/2]){
+     court.push(box(x,.003,side*(BASE+NVZ)/2,SIDE,.008,BASE-NVZ,side>0?0x367969:0x3d8273,3));
+   }
+   court.push(box(0,.004,side*NVZ/2,2*SIDE,.009,NVZ,0x768951,4));
+   box(0,.017,side*(BASE-.025),2*SIDE,.013,.05,0xf5eed3,6);
+   box(0,.017,side*(NVZ-.025),2*SIDE,.013,.05,0xf5eed3,6);
+   box(0,.017,side*(BASE+NVZ)/2,.05,.013,BASE-NVZ,0xf5eed3,6);
+ }
+ for(const side of [-1,1]) box(side*(SIDE-.025),.017,0,.05,.013,2*BASE,0xf5eed3,6);
+ for(const side of [-1,1]){
+   for(let j=0;j<9;j++) box(side*3.78,.004,-6.2+j*1.55,.47,.009,.035,0x7a9870,4);
+   box(side*3.38,.45,0,.093,.90,.093,0x263d39);
+   box(side*3.38,.921,0,.15,.092,.15,0x41635a);
+   box(side*3.38,.048,0,.29,.095,.34,0x263d39);
+ }
+ for(let i=0;i<22;i++) box(-3.20+i*.305,.465,0,.015,.77,.021,0x3f5650);
+ for(let i=0;i<6;i++) box(0,.11+i*.127,0,6.61,.014,.017,0x3f5650);
+ box(0,.847,0,6.7,.061,.055,0xf4ebcf);
+ for(const z of [-5.30,5.30]){
+   box(3.92,.27,z,.55,.16,1.77,0xd39a60);
+   for(const dz of [-.62,.62]) box(3.92,.11,z+dz,.37,.22,.10,0x476a5b);
+ }
+ for(const z of [-6.9,6.9]){
+   for(const x of [-4.04,4.04]){
+     box(x,.069,z,.42,.14,.42,0x3f6655);
+     box(x,.28,z,.29,.39,.30,0x587f54);
+     box(x-.09,.49,z,.27,.19,.27,0x819753);
+   }
+ }
+ // Players use joint coordinates so the same wrist drives the paddle and ball contact.
+ const yAxis=new T.Vector3(0,1,0);
+ const v=new T.Vector3();
+ const vector=(p)=>new T.Vector3(...p);
+ function limb(mesh,p,q){
+   const from=vector(p), to=vector(q);
+   v.subVectors(to,from);
+   mesh.position.copy(from).lerp(to,.5);
+   mesh.scale.y=v.length()+.022;
+   mesh.quaternion.setFromUnitVectors(yAxis,v.normalize());
+ }
+ function person(index){
+   const group=new T.Group();scene.add(group);
+   const jersey=index===0?0xe78049:0x4299ad;
+   const shade=index===0?0xb45031:0x2b6a7e;
+   const skin=index===0?0xce926a:0xe4ad80;
+   const part=(w,h,d,color)=>box(0,0,0,w,h,d,color,null,group);
+   const torso=part(.50,.53,.31,jersey), hip=part(.47,.24,.30,0x263c3c);
+   const stripe=part(.45,.055,.025,0xf8deb0);
+   const head=part(.32,.35,.31,skin), hair=part(.34,.097,.34,0x34413a);
+   const nose=part(.071,.075,.05,skin);
+   const eyes=[part(.047,.036,.022,0x273a38),part(.047,.036,.022,0x273a38)];
+   const arms=Array.from({length:2},()=>[part(.146,1,.151,shade),part(.116,1,.122,skin),part(.12,.12,.12,skin)]);
+   const legs=Array.from({length:2},()=>[part(.199,1,.206,0x2d4542),part(.15,1,.16,skin),part(.22,.115,.354,0xf0eee2)]);
+   const grip=part(.054,1,.059,0x2b3f39);
+   const blade=new T.Group();group.add(blade);
+   box(0,0,0,.266,.315,.051,0x243c37,null,blade);
+   box(0,0,-.030,.227,.268,.018,0x91b963,null,blade);
+   box(0,0,.030,.227,.268,.018,0x71964c,null,blade);
+   box(0,-.083,-.041,.170,.028,.011,0xe6eebe,null,blade);
+   const shadow=box(0,.011,0,.89,.008,.65,0x315e4f,5);
+   return {group,torso,hip,stripe,head,hair,nose,eyes,arms,legs,grip,blade,shadow};
+ }
+ const people=[person(0),person(1)];
+ function stance(a){
+   const {p}=a;
+   return [-1,1].map((sign,i)=>[sign*p.width/2,.078,(i===0?-1:1)*p.lead/2-.035]);
+ }
+ function placePlayer(o,a){
+   const {p}=a,h=1.02-p.drop;
+   o.group.position.set(a.x,0,a.z);
+   o.group.rotation.y=a.yaw;
+   o.shadow.position.x=a.x;o.shadow.position.z=a.z;
+   o.hip.position.set(0,h-.15,-.03);
+   o.torso.position.set(0,h+.19,-p.lean*.63);
+   o.torso.rotation.set(-p.lean*.46,p.twist,0);
+   o.stripe.position.set(-Math.sin(p.twist)*.16,h+.26,-p.lean*.66-.162*Math.cos(p.twist));
+   o.stripe.rotation.y=p.twist;
+   o.head.position.set(0,h+.63,-p.lean-.015);
+   o.hair.position.set(0,h+.79,-p.lean-.015);
+   o.nose.position.set(0,h+.59,-p.lean-.18);
+   o.eyes.forEach((eye,i)=>eye.position.set(i===0?-.076:.076,h+.647,-p.lean-.176));
+   stance(a).forEach((shoe,i)=>{
+     const sign=i===0?-1:1;
+     const [upper,lower,foot]=o.legs[i];
+     const knee=[shoe[0]*.83,(h-.20)*.52,-p.drop*.84+shoe[2]*.68];
+     limb(upper,[sign*.128,h-.18,-.03],knee);
+     limb(lower,knee,[shoe[0],.13,shoe[2]+.05]);
+     foot.position.set(...shoe);
+     const [sleeve,forearm,hand]=o.arms[i];
+     const wrist=i===0?p.left:p.hand;
+     const shoulder=[sign*.278*Math.cos(p.twist),h+.36,-p.lean*.75-sign*.278*Math.sin(p.twist)];
+     const elbow=[mix(shoulder[0],wrist[0],.54)+sign*.11,mix(shoulder[1],wrist[1],.52)-.14,mix(shoulder[2],wrist[2],.46)+.035];
+     limb(sleeve,shoulder,elbow);
+     limb(forearm,elbow,wrist);
+     hand.position.set(...wrist);
+   });
+   const center=p.hand.map((q,i)=>q+p.bat[i]);
+   limb(o.grip,p.hand,center);
+   o.blade.position.set(...center);
+   o.blade.rotation.set(p.face,p.twist*.70, -Math.atan2(p.bat[0],Math.abs(p.bat[1])+.04));
+ }
+ const ball=new T.Mesh(ballGeo,paint(0xf9dc42));
+ ball.scale.setScalar(.078);
+ ball.castShadow=true;
+ scene.add(ball);
+ const ballShadow=box(0,.020,0,.15,.007,.15,0x465a40,7);
+ const trace=Array.from({length:43},()=>box(0,0,0,.054,.054,.054,0xf3cf62));
+ const footprints=[box(0,.026,0,.29,.016,.43,0xf59658,9),box(0,.026,0,.29,.016,.43,0xf59658,9)];
+ const marks=Array.from({length:4},()=>box(0,0,0,.05,.05,.05,0x3cabcb));
+ const contactMark=new T.Mesh(ballGeo,paint(0xffdf4d));
+ contactMark.scale.setScalar(.105);
+ scene.add(contactMark);
+ const rings=Array.from({length:3},()=>new T.Group());
+ for(const ring of rings){
+   scene.add(ring);
+   for(let j=0;j<12;j++){
+     const ang=j*Math.PI/6, r=.22;
+     const piece=box(Math.cos(ang)*r,.031,Math.sin(ang)*r,.12,.022,.039,0xffc15f,8,ring);
+     piece.rotation.y=-ang-Math.PI/2;
+   }
+ }
+ const courtColors=court.map(mesh=>mesh.material);
+ function zoneStyle(zone){
+   court.forEach((mesh,i)=>{
+     let color=courtColors[i];
+     if(zone==='serve' && i===4) color=paint(0x78a85e);
+     if(zone==='halves' && i<2) color=paint(0x417b91);
+     if(zone==='kitchen' && (i===2||i===5)) color=paint(0xb19150);
+     mesh.material=color;
+   });
+ }
+ let cameraMode='home', azimuth=.72, elevation=.70, scale=1;
+ let focus=[0,0,0], close=false, dirty=true;
+ function view(kind){
+   cameraMode=kind;
+   if(kind==='top'){azimuth=viewport.clientWidth/viewport.clientHeight>1.38?Math.PI/2:0;elevation=Math.PI/2-.001;scale=1;}
+   else if(kind==='side'){azimuth=1.41;elevation=.27;scale=1;}
+   else {azimuth=.72;elevation=.70;scale=1;}
+   updateCamera();
+   changedView(kind);
+ }
+ function updateCamera(){
+   const w=viewport.clientWidth,h=viewport.clientHeight;
+   if(!w||!h)return;
+   const aspect=w/h;
+   const zoomed=(close && cameraMode!=='top') || (cameraMode==='side' && focus.some(n=>n!==0));
+   const target=zoomed?new T.Vector3(focus[0],.85,focus[2]-.32):new T.Vector3(0,.18,0);
+   const x=Math.abs(Math.cos(azimuth)),z=Math.abs(Math.sin(azimuth));
+   const spanX=9*x+15.7*z, spanZ=9*z+15.7*x;
+   const spanY=spanZ*Math.sin(elevation)+2.1*Math.cos(elevation);
+   const half=zoomed?Math.max(2.04,3.05/aspect):Math.max(spanY/.83,spanX/(aspect*.89))/2;
+   camera.position.set(target.x+30*Math.cos(elevation)*Math.sin(azimuth),target.y+30*Math.sin(elevation),target.z+30*Math.cos(elevation)*Math.cos(azimuth));
+   camera.lookAt(target);
+   Object.assign(camera,{left:-half*aspect*scale,right:half*aspect*scale,top:half*scale,bottom:-half*scale});
+   camera.updateProjectionMatrix();
+   dirty=true;
+ }
+ function resize(){if(viewport.clientWidth&&viewport.clientHeight){renderer.setSize(viewport.clientWidth,viewport.clientHeight,false);updateCamera();}}
+ new ResizeObserver(resize).observe(viewport);
+ resize();
+ let drag=null;
+ function orbit(dx,dy){
+   azimuth-=dx*.008;
+   elevation=limit(elevation+dy*.008,.22,Math.PI/2-.001);
+   updateCamera();
+   changedView('drag');
+ }
+ canvas.addEventListener('pointerdown',e=>{
+   if(drag || e.button!==0)return;
+   drag={id:e.pointerId,x:e.clientX,y:e.clientY};
+   canvas.setPointerCapture(e.pointerId);
+ });
+ canvas.addEventListener('pointermove',e=>{
+   if(!drag||drag.id!==e.pointerId)return;
+   orbit(e.clientX-drag.x,e.clientY-drag.y);
+   drag.x=e.clientX;drag.y=e.clientY;
+ });
+ for(const event of ['pointerup','pointercancel','lostpointercapture']) canvas.addEventListener(event,e=>{if(drag?.id===e.pointerId) drag=null;});
+ canvas.addEventListener('keydown',e=>{
+   const delta={ArrowLeft:[-14,0],ArrowRight:[14,0],ArrowUp:[0,14],ArrowDown:[0,-14]}[e.key];
+   if(delta){e.preventDefault();orbit(...delta);}
+ });
+ let active=true;
+ canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();active=false;errorMessage('3D 畫面已中斷','請重新載入球場。');});
+ let movie=null, nodes=[];
+ function load(next,initialView){
+   movie=next;
+   focus=next.focus??[0,0,0];
+   close=!!next.close;
+   zoneStyle(next.zone);
+   nodes=next.ball.map(p=>({...p,point:p.point??contact(actorAt(next.actors[p.index],p.t))}));
+   if(initialView) view(initialView);
+   else updateCamera();
+ }
+ function ballAt(t){
+   if(!nodes.length||t<nodes[0].t-.0001)return null;
+   for(let i=1;i<nodes.length;i++){
+     if(t<=nodes[i].t){
+       const a=nodes[i-1],b=nodes[i],f=limit((t-a.t)/(b.t-a.t),0,1);
+       const p=blend(a.point,b.point,f);
+       p[1]+=4*b.arc*f*(1-f);
+       return p;
+     }
+   }
+   return nodes.at(-1).point;
+ }
+ function place(time){
+   people.forEach((person,i)=>{
+     person.group.visible=person.shadow.visible=i<movie.actors.length;
+     if(person.group.visible) placePlayer(person,actorAt(movie.actors[i],time));
+   });
+   const p=ballAt(time);
+   ball.visible=ballShadow.visible=!!p;
+   if(p){ball.position.set(...p);ballShadow.position.x=p[0];ballShadow.position.z=p[2];}
+   trace.forEach((dot,i)=>{
+     const t=time-(i+1)*.047;
+     const a=t>=0&&t<=nodes.at(-1)?.t?ballAt(t):null;
+     dot.visible=!!a && time<=nodes.at(-1).t+.45 && (i<21||!movie.close);
+     if(dot.visible){dot.position.set(...a);dot.scale.setScalar(.057-i*.00071);}
+   });
+   const impacts=nodes.filter(node=>node.bounce&&node.t<=time+.001);
+   rings.forEach((ring,i)=>{
+     ring.visible=i<impacts.length;
+     if(ring.visible) ring.position.set(impacts[i].point[0],0,impacts[i].point[2]);
+   });
+   const show=movie.marks!==undefined && time>=movie.marks-.19 && time<=movie.marks+.21;
+   const shoeCue=show || (movie.zone==='kitchen' && time>=1.32 && time<=2.8);
+   const main=actorAt(movie.actors[0],time);
+   footprints.forEach((mesh,i)=>{
+     mesh.visible=shoeCue;
+     if(mesh.visible){
+       const point=world(main,stance(main)[i]);
+       mesh.position.set(point[0],.027,point[2]);
+       mesh.rotation.y=main.yaw;
+     }
+   });
+   const drawContact=show && movie.marks===1.50;
+   contactMark.visible=drawContact;
+   if(drawContact) contactMark.position.set(...contact(main));
+   marks.forEach((mesh,i)=>{
+     mesh.visible=show;
+     if(show){
+       const hand=world(main,main.p.hand.map((n,j)=>n+main.p.bat[j]));
+       const o=[[-.18,0],[.18,0],[0,.203],[0,-.203]][i];
+       mesh.position.set(hand[0]+o[0],hand[1]+o[1],hand[2]-.08);
+     }
+   });
+   dirty=true;
+ }
+ function draw(){
+   if(active&&dirty){renderer.render(scene,camera);dirty=false;}
+ }
+ return {load,place,draw,view};
+}
+
+let mode='rules', topic=0, caseIndex=0, version='good', movie=null, item=null;
+let time=0, playing=false, previous=null, visual=null, failed=false, answerGiven=null;
+const memory=new Map();
+const groupLabels={rules:'球場規則',skills:'動作示範',safety:'上場提醒'};
+const groupNumber={rules:'01',skills:'02',safety:'03'};
+const modeButtons=buttons('[data-mode]');
+const viewButtons=buttons('[data-view]');
+const play=byId('play'),pause=byId('pause'),timeline=byId('timeline');
+function changeView(name){
+ byId('viewName').textContent={top:'俯視球場',side:'球員側面',home:'斜上方',drag:'自由視角'}[name];
+ viewButtons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===name)));
+}
+function savedKey(){return topic+'-'+caseIndex;}
+function setContent(keepTime=false){
+ const oldStep=movie?.steps.findLastIndex(s=>s.t<=time+.015)??0;
+ const titles=names[mode];
+ byId('sceneName').textContent=groupNumber[mode]+' ／ '+groupLabels[mode];
+ byId('panelTitle').textContent={rules:'選擇規則',skills:'選擇動作',safety:'選擇上場提醒'}[mode];
+ modeButtons.forEach(b=>{
+   const selected=b.dataset.mode===mode;
+   b.setAttribute('aria-selected',String(selected));
+   b.tabIndex=selected?0:-1;
+ });
+ byId('lesson').setAttribute('aria-labelledby','tab-'+mode);
+ const topicBox=byId('topics');
+ if(topicBox.dataset.mode!==mode){
+   topicBox.dataset.mode=mode;
+   topicBox.replaceChildren(...titles.map((name,i)=>{
+     const b=document.createElement('button');
+     b.textContent=name;
+     b.addEventListener('click',()=>{if(topic!==i){topic=i;caseIndex=0;version='good';setContent();}});
+     return b;
+   }));
+ }
+ Array.from(topicBox.children).forEach((b,i)=>b.setAttribute('aria-pressed',String(i===topic)));
+ byId('quiz').hidden=byId('cases').hidden=mode!=='rules';
+ byId('versions').hidden=mode!=='skills';
+ byId('coach').hidden=mode==='rules';
+ byId('markKey').hidden=mode!=='skills';
+ if(mode==='rules'){
+   item=rules[topic][caseIndex];
+   movie=item.movie();
+   byId('cardLabel').textContent='觀察案例';
+   byId('title').textContent=item.title;
+   byId('story').textContent=item.story;
+   byId('caseCount').textContent='情境 '+(caseIndex+1)+' ／ '+rules[topic].length;
+   byId('prevCase').disabled=caseIndex===0;
+   byId('nextCase').disabled=caseIndex===rules[topic].length-1;
+   byId('question').textContent=topic===3?'這一球是界內還是界外？':'你會怎麼判這一球？';
+   buttons('[data-answer]').forEach(b=>b.textContent=b.dataset.answer==='yes'?(topic===3?'界內':'合法'):(topic===3?'界外':'犯規'));
+   answerGiven=memory.get(savedKey())??null;
+   feedback();
+ }else{
+   const text=mode==='skills'?skillText[topic][version==='good'?0:1]:safetyText[topic];
+   movie=mode==='skills'?skillMovie(topic,version==='bad'):safetyMovie(topic);
+   byId('cardLabel').textContent=mode==='skills'?skillNames[topic]:'上場前先想一想';
+   byId('title').textContent=text[0];byId('story').textContent=text[1];byId('coach').textContent=text[2];
+   buttons('[data-version]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.version===version)));
+ }
+ byId('steps').replaceChildren(...movie.steps.map((s,i)=>{
+   const li=document.createElement('li'), b=document.createElement('button'), marker=document.createElement('span');
+   marker.textContent=String(i+1).padStart(2,'0');
+   b.append(marker,document.createTextNode(s.label));b.title=s.desc;
+   b.disabled=!visual||failed;
+   b.addEventListener('click',()=>{setPlaying(false);setTime(s.t);});
+   li.appendChild(b);
+   return li;
+ }));
+ const initialView=mode==='skills'?'side':mode==='rules' && topic===3?'top':'home';
+ if(visual&&!failed) visual.load(movie,keepTime?null:initialView);
+ timeline.max=movie.duration;
+ setPlaying(false);
+ setTime(keepTime?movie.steps[limit(oldStep,0,movie.steps.length-1)].t:0);
+}
+function feedback(){
+ const output=byId('feedback');
+ output.hidden=answerGiven===null;
+ buttons('[data-answer]').forEach(b=>b.setAttribute('aria-pressed',String(answerGiven!==null&&answerGiven===(b.dataset.answer==='yes'))));
+ if(answerGiven===null)return;
+ const correct=answerGiven===item.answer;
+ const result=topic===3?(item.answer?'界內':'界外'):(item.answer?'合法':'犯規');
+ const bold=document.createElement('strong'),note=document.createElement('span');
+ bold.textContent=(correct?'判對了。':'再觀察一次。')+'這球判「'+result+'」。';
+ note.textContent=item.why;
+ output.dataset.correct=String(correct);
+ output.replaceChildren(bold,note);
+}
+function setTime(t){
+ time=limit(t,0,movie.duration);
+ timeline.value=time;
+ const i=Math.max(0,movie.steps.findLastIndex(s=>s.t<=time+.012));
+ const step=movie.steps[i];
+ byId('phase').textContent=step.label;
+ byId('cue').textContent=step.desc;
+ byId('time').textContent=time.toFixed(1)+' ／ '+movie.duration.toFixed(1)+' 秒';
+ const steps=Array.from(byId('steps').querySelectorAll('button'));
+ steps.forEach((b,j)=>{if(j===i)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});
+ if(visual&&!failed) visual.place(time);
+}
+function setPlaying(value){
+ playing=value&&!!visual&&!failed;previous=null;
+ play.disabled=!visual||failed||playing;
+ pause.disabled=!visual||failed||!playing;
+}
+function advance(t){
+ if(failed)return;
+ if(playing && !document.hidden){
+   if(previous!==null) setTime(time+(t-previous)/1000*Number(byId('rate').value));
+   previous=t;
+   if(time>=movie.duration) setPlaying(false);
+ }
+ visual.draw();
+ requestAnimationFrame(advance);
+}
+document.addEventListener('visibilitychange',()=>{previous=null;});
+modeButtons.forEach((b,i)=>{
+ b.addEventListener('click',()=>{if(mode!==b.dataset.mode){mode=b.dataset.mode;topic=0;caseIndex=0;version='good';setContent();}});
+ b.addEventListener('keydown',e=>{
+   const offset=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;
+   if(offset){e.preventDefault();const next=modeButtons[(i+offset+modeButtons.length)%modeButtons.length];next.click();next.focus();}
+ });
+});
+byId('prevCase').onclick=()=>{if(caseIndex>0){caseIndex--;setContent();}};
+byId('nextCase').onclick=()=>{if(caseIndex<rules[topic].length-1){caseIndex++;setContent();}};
+buttons('[data-answer]').forEach(b=>b.addEventListener('click',()=>{
+ answerGiven=b.dataset.answer==='yes';memory.set(savedKey(),answerGiven);feedback();
+ if(visual&&!failed){setTime(0);setPlaying(true);}
+}));
+buttons('[data-version]').forEach(b=>b.addEventListener('click',()=>{if(version!==b.dataset.version){version=b.dataset.version;setContent(true);}}));
+play.onclick=()=>{if(time>=movie.duration) setTime(0);setPlaying(true);};
+pause.onclick=()=>setPlaying(false);
+byId('replay').onclick=()=>{setTime(0);setPlaying(true);};
+byId('nextStep').onclick=()=>{setPlaying(false);setTime(movie.steps.find(s=>s.t>time+.03)?.t??0);};
+timeline.oninput=()=>{setPlaying(false);setTime(Number(timeline.value));};
+viewButtons.forEach(b=>b.onclick=()=>visual.view(b.dataset.view));
+byId('reset').onclick=()=>visual.view('home');
+byId('project').onclick=()=>{
+ const on=document.body.classList.toggle('projecting');
+ byId('project').setAttribute('aria-pressed',String(on));
+ byId('project').textContent=on?'結束投影模式':'投影模式';
+};
+byId('retry').onclick=()=>location.reload();
+const visualControls=()=>[byId('replay'),byId('nextStep'),timeline,byId('rate'),byId('reset'),...viewButtons];
+function errorMessage(title,detail){
+ failed=true;
+ setPlaying(false);
+ for(const control of [...visualControls(),...buttons('#steps button')]) control.disabled=true;
+ byId('notice').hidden=false;byId('retry').hidden=false;
+ byId('noticeTitle').textContent=title;byId('noticeText').textContent=detail;
+}
+setContent();
+function loadEngine(){
+ const script=document.createElement('script');
+ script.src='https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js';
+ script.crossOrigin='anonymous';
+ const noNetwork=()=>errorMessage('無法載入 3D 球場','請確認已連網，且瀏覽器或校園網路允許存取 cdn.jsdelivr.net，再重新載入。');
+ const timeout=setTimeout(()=>{script.onload=script.onerror=null;script.remove();noNetwork();},12000);
+ script.onerror=()=>{clearTimeout(timeout);noNetwork();};
+ script.onload=()=>{
+   clearTimeout(timeout);
+   if(!window.THREE){noNetwork();return;}
+   try{
+     visual=makeCourt(window.THREE,changeView);
+     visualControls().forEach(control=>control.disabled=false);
+     setContent();visual.draw();byId('notice').hidden=true;
+     requestAnimationFrame(advance);
+   }catch(error){console.error(error);errorMessage('無法開啟 3D 球場','請用新版 Chrome、Edge 或 Firefox 開啟，並確認瀏覽器允許繪圖功能。');}
+ };
+ document.head.appendChild(script);
+}
+loadEngine();
+</script>
+</body>
+</html>
